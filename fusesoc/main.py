@@ -382,6 +382,10 @@ def main():
     parser_core_info.add_argument('core')
     parser_core_info.set_defaults(func=core_info)
 
+    # list-paths subparser
+    parser_list_paths = subparsers.add_parser('list-paths', help="Display the search order for core root paths. Alias for 'library list'.")
+    parser_list_paths.set_defaults(func=list_paths)
+    
     # library subparser
     parser_library = subparsers.add_parser('library', help='Subcommands for dealing with library management')
     library_subparsers = parser_library.add_subparsers()

@@ -23,6 +23,7 @@ from fusesoc.config import Config
 from fusesoc.coremanager import CoreManager, DependencyError
 from fusesoc.vlnv import Vlnv
 from fusesoc.utils import Launcher, setup_logging
+import fusesoc.repo as repo
 
 import logging
 
@@ -136,10 +137,13 @@ def init(args):
     logger.info("FuseSoC is ready to use!")
 
 def list_paths(args):
-    cores_root = CoreManager().get_cores_root()
+    cores_root = CoreManager().get_repos()
     print("\n".join(cores_root))
     
 def add_repos(args):
+    args.paths = map(os.path.abspath, args.paths)
+    for path in args.paths:
+        repo.make_repo(path)
     parser = configparser.ConfigParser()
     if Config().config_files:
         config_file = Config().config_files[-1]
@@ -316,7 +320,7 @@ def run(args):
                        env_cores_root,
                        args.cores_root]:
         try:
-            cm.add_cores_root(cores_root)
+            cm.add_repos(cores_root)
         except (RuntimeError, IOError) as e:
             logger.warning("Failed to register cores root '{}'".format(str(e)))
     # Process global options

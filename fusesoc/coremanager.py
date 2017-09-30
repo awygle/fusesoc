@@ -11,6 +11,7 @@ from simplesat.repository import Repository
 from simplesat.request import Request
 
 from fusesoc.core import Core
+from fusesoc.repo import Repo, make_repo
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +120,7 @@ class CoreDB(object):
 
 class CoreManager(object):
     _instance = None
-    _cores_root = []
+    _repos = []
 
     db = CoreDB()
 
@@ -151,7 +152,7 @@ class CoreManager(object):
                     self.load_core(os.path.join(root, f))
                     del dirs[:]
 
-    def add_cores_root(self, path):
+    def add_repos(self, path):
         if path is None:
             return
         elif not isinstance(path, list):
@@ -160,13 +161,13 @@ class CoreManager(object):
             if not p:
                 # skip empty entries
                 continue
-            abspath = os.path.abspath(os.path.expanduser(p))
-            if not abspath in self._cores_root:
-                self.load_cores(os.path.expanduser(p))
-                self._cores_root += [abspath]
+            repo = make_repo(p)
+            self._repos.append(repo)
+            for core in repo.get_cores():
+                self.db.add(core)
 
-    def get_cores_root(self):
-        return self._cores_root
+    def get_repos(self):
+        return [repo.path for repo in self._repos]
 
     def get_depends(self, core, flags):
         resolved_core = self.db.find(core)

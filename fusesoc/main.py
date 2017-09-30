@@ -139,15 +139,24 @@ def list_paths(args):
     cores_root = CoreManager().get_cores_root()
     print("\n".join(cores_root))
     
-def add_paths(args):
-    config_file = Config().config_files[-1]
-    logger.debug("Modifying " + config_file)
+def add_repos(args):
     parser = configparser.ConfigParser()
-    parser.read(config_file)
-    try:
-        current_roots = parser.get("main", "cores_root")
-    except (configparser.NoSectionError, configparser.NoOptionError):
-        logger.warning("Config file {} does not contain a cores_root option".format(config_file))
+    if Config().config_files:
+        config_file = Config().config_files[-1]
+        logger.debug("Modifying " + config_file)
+        parser.read(config_file)
+        try:
+            current_roots = parser.get("main", "cores_root")
+        except (configparser.NoSectionError, configparser.NoOptionError):
+            logger.warning("Config file {} does not contain a cores_root option".format(config_file))
+            current_roots = ""
+    else:
+        xdg_config_home = os.environ.get('XDG_CONFIG_HOME') or \
+                          os.path.join(os.path.expanduser('~'), '.config')
+        config_file = os.path.join(xdg_config_home, 'fusesoc','fusesoc.conf')
+        if not os.path.exists(os.path.dirname(config_file)):
+            os.makedirs(os.path.dirname(config_file))
+        logger.warning("No config file found - creating one at " + config_file)
         current_roots = ""
     if not parser.has_section("main"):
         parser.add_section("main")
@@ -395,9 +404,9 @@ def main():
     parser_library_list.set_defaults(func=list_paths)
     
     # library add subparser
-    parser_add_paths = library_subparsers.add_parser('add', help='Add core root paths to the config file')
-    parser_add_paths.add_argument('paths', nargs="+", help='A list of paths to add to the config file')
-    parser_add_paths.set_defaults(func=add_paths)
+    parser_add_paths = library_subparsers.add_parser('add', help='Add repositories to the config file')
+    parser_add_paths.add_argument('paths', nargs="+", help='A list of repositories to add to the config file')
+    parser_add_paths.set_defaults(func=add_repos)
 
     # sim subparser
     parser_sim = subparsers.add_parser('sim', help='Setup and run a simulation')

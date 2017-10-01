@@ -141,8 +141,7 @@ def list_paths(args):
     print("\n".join(repo_paths))
     
 def add_repos(args):
-    repos = map(repo.make_repo, args.paths)
-    paths = [r.path for r in repos]
+    paths = args.paths
     parser = configparser.ConfigParser()
     if Config().config_files:
         config_file = Config().config_files[-1]
@@ -165,16 +164,23 @@ def add_repos(args):
         parser.add_section("main")
     new_paths = filter(lambda x: not x in current_roots.split(), paths)
     old_paths = filter(lambda x: x in current_roots.split(), paths)
+    if new_paths:
+        # let repo canonicalize path and check again
+        repos = map(repo.make_repos, new_paths)
+        repo_paths = [r.path for r in repos]
+        new_paths = filter(lambda x: not x in repo_paths, new_paths)
+        if new_paths:
+            logger.info("Added " + str(new_paths) + " as core roots.")
+        else:
+            logger.warning("No new paths added!")
+    else:
+        logger.warning("No new paths added!")
     new_roots = (current_roots + " " + ' '.join(new_paths)).strip()
     parser.set("main", "cores_root", new_roots)
     with open(config_file, 'wb') as configfile:
         parser.write(configfile)
     if old_paths:
         logger.info("core roots " + str(old_paths) + " are already present in " + config_file)
-    if new_paths:
-        logger.info("Added " + str(new_paths) + " as core roots.")
-    else:
-        logger.warning("No new paths added!")
 
 def list_cores(args):
     cores = CoreManager().get_cores()

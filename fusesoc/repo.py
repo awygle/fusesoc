@@ -11,7 +11,9 @@ if sys.version[0] == '2':
             super(abstractclassmethod, self).__init__(callable)
     
 def make_repo(path):
-    for subcls in Repo.__subclasses__():
+    subclasses = Repo.__subclasses__()
+    subclasses.sort(key=lambda x: x.priority, reverse=True)
+    for subcls in subclasses:
         try:
             return subcls(path)
         except ValueError as e:
@@ -32,3 +34,4 @@ class Repo:
         pass
     
 import localrepo
+import gitrepo

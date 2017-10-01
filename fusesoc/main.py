@@ -137,13 +137,12 @@ def init(args):
     logger.info("FuseSoC is ready to use!")
 
 def list_paths(args):
-    cores_root = CoreManager().get_repos()
-    print("\n".join(cores_root))
+    repo_paths = [repo.path for repo in CoreManager().get_repos()]
+    print("\n".join(repo_paths))
     
 def add_repos(args):
-    args.paths = map(os.path.abspath, args.paths)
-    for path in args.paths:
-        repo.make_repo(path)
+    repos = map(repo.make_repo, args.paths)
+    paths = [r.path for r in repos]
     parser = configparser.ConfigParser()
     if Config().config_files:
         config_file = Config().config_files[-1]
@@ -164,8 +163,8 @@ def add_repos(args):
         current_roots = ""
     if not parser.has_section("main"):
         parser.add_section("main")
-    new_paths = filter(lambda x: not x in current_roots.split(), args.paths)
-    old_paths = filter(lambda x: x in current_roots.split(), args.paths)
+    new_paths = filter(lambda x: not x in current_roots.split(), paths)
+    old_paths = filter(lambda x: x in current_roots.split(), paths)
     new_roots = (current_roots + " " + ' '.join(new_paths)).strip()
     parser.set("main", "cores_root", new_roots)
     with open(config_file, 'wb') as configfile:
@@ -275,7 +274,8 @@ def sim(args):
                 flags, args.system, args.backendargs)
 
 def update(args):
-    for root in CoreManager().get_cores_root():
+    for repo in CoreManager().get_repos():
+        root = repo.path
         if os.path.exists(root):
             args = ['-C', root,
                     'config', '--get', 'remote.origin.url']

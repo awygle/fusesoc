@@ -167,7 +167,7 @@ class CoreManager(object):
                 self.db.add(core)
 
     def get_repos(self):
-        return [repo.path for repo in self._repos]
+        return self._repos
 
     def get_depends(self, core, flags):
         resolved_core = self.db.find(core)

@@ -14,9 +14,12 @@ class LocalRepo(Repo):
     def cache_cores(self, cache_dir):
         pass
     
+    priority = -1
+    
     def __init__(self, path):
-        self.path = path
+        self.path = os.path.abspath(path) # must be de-duplicated
         self._cores = []
+        self._cached = True
         
         if path:
             logger.debug("Checking for cores in " + path)
